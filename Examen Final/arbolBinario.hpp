@@ -1,11 +1,6 @@
 #ifndef ARBOLBINARIO_HPP_INCLUDED
 #define ARBOLBINARIO_HPP_INCLUDED
 
-#include <iostream>
-#include <string>
-#include <fstream>
-
-using namespace std; 
 
 struct nodoBinario{
     struct nodoBinario *izq;
@@ -101,19 +96,19 @@ int insertarArbolBinario(arbolBinario* arbol,int id){
 
 }
 
-void recorridoArbolRecursiva(nodoBinario* nodo,std::ofstream& archivo){
+void recorridoArbolRecursiva(nodoBinario* nodo,FILE* archivo){
 
 
     if(nodo==0)return;
 
-        archivo << "\t" << nodo->id << "[label=\"<p0>|" << nodo->id  << " \\n Nivel: " << nodo->nivel << "\\n FE: " << nodo->fe << "\\n Altura:" << nodo->altura << "|<p1>\"];" << std::endl;
+    fprintf(archivo, "%s %i %s %i %s %i %s\n","\t",nodo->id,"[label=\"<p0>|", nodo->id,"\\nNivel:",nodo->nivel,"|<p1>\"];");
 
     if(nodo->izq!=0){
-        archivo << "\t" << nodo->id << ":p0 -> " << nodo->izq->id << ";" << std::endl;
+    	fprintf(archivo, "%s %i %s %i %s\n","\t",nodo->id , ":p0 -> " ,nodo->izq->id,";");
     }
 
     if(nodo->der!=0){
-        archivo << "\t" << nodo->id << ":p1 -> " << nodo->der->id << ";" << std::endl;
+    	fprintf(archivo, "%s %i %s %i %s\n","\t",nodo->id , ":p1 -> " ,nodo->der->id,";");
     }
 
     recorridoArbolRecursiva(nodo->izq,archivo);
@@ -122,13 +117,17 @@ void recorridoArbolRecursiva(nodoBinario* nodo,std::ofstream& archivo){
 }
 
 void recorridoArbol(arbolBinario* arbol){
-    std::ofstream archivo_salida("arbol.dot");
-    archivo_salida << "digraph g {" << std::endl;
-    archivo_salida << "\tnode [shape=record,height=.08,fontsize=11];" << std::endl;
-    recorridoArbolRecursiva(arbol->raiz,archivo_salida);
-    archivo_salida << "}" << std::endl;
-    archivo_salida.close();
-    system("dot -Tjpg -O  arbol.dot");
+	remove("arbolSPL.dot");
+	FILE* archivo;
+	archivo = fopen("arbolSPL.dot","a");
+	fprintf(archivo, "%s\n","digraph g {" );
+	fprintf(archivo, "%s\n","\tnode [shape=record,height=.08,fontsize=11];" );
+    recorridoArbolRecursiva(arbol->raiz,archivo);
+    fprintf(archivo, "%s\n","}" );
+    fclose(archivo);
+    system("dot -Tjpg -O  arbolSPL.dot");
+    system("arbolSPL.dot.jpg");
+    
 }
 
 struct nodoBinario* buscarNodoBinario(nodoBinario* nodo,int id){
@@ -162,7 +161,7 @@ struct nodoBinario* buscarNodoBinario(nodoBinario* nodo,int id){
 
 struct nodoBinario* buscarArbolBinario(arbolBinario* arbol,int id){
 
-     if(arbol->raiz==0){
+    if(arbol->raiz==0){
         return 0;
     }
 
@@ -237,108 +236,136 @@ void infoArbolBinario(arbolBinario* arbol){
     }
 }
 
-struct nodoBinario* rotacionesNodoBinario(nodoBinario* nodo){
+struct nodoBinario* rotacionesNodoBinario(nodoBinario* nodo, int id){
     if(nodo==0){
         return 0;
     }
 
-    nodo->izq = rotacionesNodoBinario(nodo->izq);
-    nodo->der = rotacionesNodoBinario(nodo->der);
-
-    if(nodo->fe==2){
-        if(nodo->der->fe==0||nodo->der->fe==1){
-            //simple Derecha
-            nodoBinario* auxIzq = nodo->der->izq;
-            nodoBinario* auxDer = nodo->der;
-            nodo->der = auxIzq;
-            auxDer->izq = nodo;
-            nodo = auxDer;
-            return nodo;
-        }else if(nodo->der->fe==-1){
-            //Doble Derecha
-            nodoBinario* Zizq = nodo->der->izq->izq;
-            nodoBinario* ZDer = nodo->der->izq->der;
-            nodoBinario* nodoRaiz = nodo->der->izq;
-            nodoRaiz->izq = nodo;
-            nodoRaiz->der = nodo->der;
-            nodoRaiz->izq->der = Zizq;
-            nodoRaiz->der->izq = ZDer;
-            nodo = nodoRaiz;
-            return nodo;
-        }
-    }else if(nodo->fe==-2){
-        if(nodo->izq->fe==0||nodo->izq->fe==-1){
-            //Simple Izquierda
-            nodoBinario* auxY = nodo->izq;
-            nodoBinario* auxYder = nodo->izq->der;
-            auxY->der = nodo;
-            nodo->izq = auxYder;
-            nodo = auxY;
-            return nodo;
-        }else if(nodo->der->fe==1){
-            //Doble Izquierda
-            nodoBinario* Zizq = nodo->izq->der->izq;
-            nodoBinario* ZDer = nodo->izq->der->der;
-            nodoBinario* nodoRaiz = nodo->izq->der;
-            nodoRaiz->izq = nodo->izq;
-            nodoRaiz->der = nodo;
-            nodoRaiz->izq->der = Zizq;
-            nodoRaiz->der->izq = ZDer;
-            nodo = nodoRaiz;
-            return nodo;
-        }
+    if(nodo->id<id){
+        // der
+        nodo->der = rotacionesNodoBinario(nodo->der,id);
+        nodoBinario* nodoAux = nodo->der;
+        nodoBinario* nodoAuxIzq = nodo->der->izq;
+        nodoAux->izq = nodo;
+        nodo->der = nodoAuxIzq;
+        nodo  = nodoAux;
+    }else if(nodo->id>id){
+        // izq
+        nodo->izq = rotacionesNodoBinario(nodo->izq,id);
+        nodoBinario* nodoAux = nodo->izq;
+        nodoBinario* nodoAuxDer = nodo->izq->der;
+        nodoAux->der = nodo;
+        nodo->izq = nodoAuxDer;
+        nodo  = nodoAux;
     }
     return nodo;
+}
 
+void rotacionesArbolBinario(arbolBinario* arbol, int id){
+    if(arbol->raiz==0){
+        return;
+    }
+    
+    if(arbol->raiz->id<id){
+        // der
+        arbol->raiz->der = rotacionesNodoBinario(arbol->raiz->der,id);
+        nodoBinario* nodoAux = arbol->raiz->der;
+        nodoBinario* nodoAuxIzq = arbol->raiz->der->izq;
+        nodoAux->izq = arbol->raiz;
+        arbol->raiz->der = nodoAuxIzq;
+        arbol->raiz  = nodoAux;
+
+    }else if(arbol->raiz->id>id){
+        // izq
+        arbol->raiz->izq = rotacionesNodoBinario(arbol->raiz->izq,id);
+        nodoBinario* nodoAux = arbol->raiz->izq;
+        nodoBinario* nodoAuxDer = arbol->raiz->izq->der;
+        nodoAux->der = arbol->raiz;
+        arbol->raiz->izq = nodoAuxDer;
+        arbol->raiz  = nodoAux;
+    }else{
+        //break
+
+    }
+}
+
+struct nodoBinario* arbolRemplazaNodo(nodoBinario* raiz, nodoBinario* nodo){
+    if(nodo==0){
+        return 0;
+    }
+    if(nodo->der==0){
+        printf("%i %i \n",raiz->id,nodo->id);
+        raiz->id = nodo->id;
+        return nodo->izq;
+    }
+    nodo->der = arbolRemplazaNodo(raiz,nodo->der);
+    return nodo;
+}
+
+struct nodoBinario* arbolEliminarNodo(nodoBinario* nodo,int id){
+
+    if(nodo==0){
+        return 0;
+    }
+
+    if(nodo->id<id){
+
+        if(nodo->der==0){
+            return 0;
+        }else{
+            // metodo recursivo
+            nodo->der = arbolEliminarNodo(nodo->der,id);
+            return nodo;
+        }
+
+    }else if(nodo->id>id){
+        if(nodo->izq==0){
+            return 0;
+        }else{
+            // metodo recursivo
+            nodo->izq = arbolEliminarNodo(nodo->izq,id);
+            return nodo;
+        }
+    }else{
+        if(nodo->izq!=0){
+            nodo->izq = arbolRemplazaNodo(nodo,nodo->izq);
+        }else{
+            nodo = nodo->der;
+        }
+        return nodo;
+    }
+    
 
 }
 
-void rotacionesArbolBinario(arbolBinario* arbol){
+void arbolEliminar(arbolBinario* arbol, int id){
     if(arbol->raiz==0){
         return;
     }
 
-    arbol->raiz->izq = rotacionesNodoBinario(arbol->raiz->izq);
-    arbol->raiz->der = rotacionesNodoBinario(arbol->raiz->der);
+    if(arbol->raiz->id<id){
 
-    if(arbol->raiz->fe==2){
-        if(arbol->raiz->der->fe==0||arbol->raiz->der->fe==1){
-           //simple Derecha
-           nodoBinario* auxIzq = arbol->raiz->der->izq;
-           nodoBinario* auxDer = arbol->raiz->der;
-           arbol->raiz->der = auxIzq;
-           auxDer->izq = arbol->raiz;
-           arbol->raiz = auxDer;
-        }else if(arbol->raiz->der->fe==-1){
-            //Doble Derecha
-            nodoBinario* Zizq = arbol->raiz->der->izq->izq;
-            nodoBinario* ZDer = arbol->raiz->der->izq->der;
-            nodoBinario* nodoRaiz = arbol->raiz->der->izq;
-            nodoRaiz->izq = arbol->raiz;
-            nodoRaiz->der = arbol->raiz->der;
-            nodoRaiz->izq->der = Zizq;
-            nodoRaiz->der->izq = ZDer;
-            arbol->raiz = nodoRaiz;
+        if(arbol->raiz->der==0){
+            return;
+        }else{
+            // metodo recursivo
+            arbol->raiz->der = arbolEliminarNodo(arbol->raiz->der,id);
         }
-    }else if(arbol->raiz->fe==-2){
-        if(arbol->raiz->izq->fe==0||arbol->raiz->izq->fe==-1){
-            //Simple Izquierda
-            nodoBinario* auxY = arbol->raiz->izq;
-            nodoBinario* auxYder = arbol->raiz->izq->der;
-            auxY->der = arbol->raiz;
-            arbol->raiz->izq = auxYder;
-            arbol->raiz = auxY;
-        }else if(arbol->raiz->izq->fe==1){
-            //Doble Izquierda
-            nodoBinario* Zizq = arbol->raiz->izq->der->izq;
-            nodoBinario* ZDer = arbol->raiz->izq->der->der;
-            nodoBinario* nodoRaiz = arbol->raiz->izq->der;
-            nodoRaiz->izq = arbol->raiz->izq;
-            nodoRaiz->der = arbol->raiz;
-            nodoRaiz->izq->der = Zizq;
-            nodoRaiz->der->izq = ZDer;
-            arbol->raiz = nodoRaiz;
+
+    }else if(arbol->raiz->id>id){
+        if(arbol->raiz->izq==0){
+            return;
+        }else{
+            // metodo recursivo
+            arbol->raiz->izq = arbolEliminarNodo(arbol->raiz->izq,id);
         }
+    }else{
+        if(arbol->raiz->izq!=0){
+            arbol->raiz->izq = arbolRemplazaNodo(arbol->raiz,arbol->raiz->izq);
+        }else{
+            arbol->raiz = arbol->raiz->der;
+        }
+         
     }
 }
 
