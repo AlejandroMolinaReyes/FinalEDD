@@ -1,0 +1,14 @@
+digraph g {
+	node [shape=record,height=.08,fontsize=11];
+	 12 [label="<p0>| 12 \nNivel: 2 |<p1>"];
+	 12 :p0 ->  10 ;
+	 12 :p1 ->  13 ;
+	 10 [label="<p0>| 10 \nNivel: 0 |<p1>"];
+	 10 :p0 ->  5 ;
+	 5 [label="<p0>| 5 \nNivel: 1 |<p1>"];
+	 5 :p0 ->  4 ;
+	 5 :p1 ->  7 ;
+	 4 [label="<p0>| 4 \nNivel: 2 |<p1>"];
+	 7 [label="<p0>| 7 \nNivel: 2 |<p1>"];
+	 13 [label="<p0>| 13 \nNivel: 1 |<p1>"];
+}
